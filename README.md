@@ -3,6 +3,10 @@ PANEL MINECRAFT
 
 ![image](https://github.com/user-attachments/assets/89f26776-c838-4bf1-be60-a24bae94b4fa)
 
+
+https://github.com/user-attachments/assets/b97c8798-70a3-4e39-a5d2-1c58f077c853
+
+
 Próximos Passos (Continuando a Configuração do Agente Python)
 Agora que o usuário existe, podemos finalizar as configurações.
 
