@@ -158,6 +158,16 @@ crontab -e
 
 
 
+User_Setup.h
+Arquivo de configuração para a biblioteca TFT_eSPI. Precisa ser colocado no diretório onde a biblioteca está instalada.
+
+lv_conf.h
+Arquivo de configuração da biblioteca LVGL. Precisa ser colocado no diretório de bibliotecas do Arduino.
+
+Fonte: https://randomnerdtutorials.com/lvgl-cheap-yellow-display-esp32-2432s028r/
+
+
+
   
 
 
