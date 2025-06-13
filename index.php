@@ -80,8 +80,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             case "status":
                 $response = callPythonAgent('/server_status', 'GET');
                 if (isset($response['success']) && $response['success']) {
-                    $minecraft_output = "Status do Servidor: " . ($response['status'] ?? 'N/A') . "<br>Rodando: " . (isset($response['is_running']) && $response['is_running'] ? 'Sim' : 'Não');
-                } else {
+                    $minecraft_output = "Status do Servidor: " . ($response['status'] ?? 'N/A') . "<hr><center>Rodando: " . (isset($response['is_running']) && $response['is_running'] ? "<span style='color: #00ff00;'>✔ Sim</span><hr><br></center>" : "<span style='color: red;'>✘ Não</br></span></center><hr>");
+                
+				
+				} else {
                     $minecraft_output = "Erro ao obter status: " . ($response['error'] ?? 'Erro desconhecido');
                 }
                 break;
