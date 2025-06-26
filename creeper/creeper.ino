@@ -26,13 +26,18 @@
 #define SD_CS   5  // CD (Chip Select)
 
 // --- Variáveis Globais de Credenciais e Controle ---
+// Usaremos Strings para facilitar a manipulação de leitura/escrita e web.
+// Elas serão convertidas para const char* quando necessário.
 String ssidStr = "";
 String passwordStr = "";
 String servidorStr = ""; 
 
+// Ponteiros para const char* que serão inicializados no setup()
+// apontando para o conteúdo das Strings acima.
 const char* ssid;
 const char* password;
-const char* servidor; 
+const char* servidor;
+
 
 WiFiUDP ntpUDP;
 // -10800 é para GMT-3 (Brasília). A hora atual será ajustada para o fuso horário correto automaticamente.
@@ -101,7 +106,8 @@ void gerenciarCredenciais() {
     tft.println("Use 'SD Card Formatter'.");
     delay(10000); 
     Serial.println("Não foi possível montar o SD. Abortando a leitura de credenciais.");
-    ssidStr = ""; passwordStr = ""; servidorStr = "";
+    // Deixa as Strings vazias para indicar erro
+    ssidStr = ""; passwordStr = ""; servidorStr = ""; 
     return;
   } else {
     Serial.println("✅ Cartão SD montado com sucesso.");
@@ -121,6 +127,7 @@ void gerenciarCredenciais() {
       Serial.println("Por favor, edite o arquivo 'creeper_credenciais.txt' no SD via FTP para suas credenciais reais.");
     } else {
       Serial.println("⚠️ Erro ao criar o arquivo de credenciais. Verifique o SD.");
+      // Deixa as Strings vazias para indicar erro
       ssidStr = ""; passwordStr = ""; servidorStr = ""; 
       return;
     }
@@ -133,19 +140,37 @@ void gerenciarCredenciais() {
     servidorStr = file.readStringUntil('\n'); servidorStr.trim();
     file.close();
 
-    ssid = ssidStr.c_str(); 
-    password = passwordStr.c_str(); 
-    servidor = servidorStr.c_str(); 
-
     Serial.println("🔐 Credenciais carregadas:");
     Serial.println("SSID: " + ssidStr);
     Serial.println("Senha: " + passwordStr);
     Serial.println("Servidor: " + servidorStr);
   } else {
     Serial.println("⚠️ Erro ao ler o arquivo de credenciais. O arquivo pode estar vazio ou corrompido.");
+    // Deixa as Strings vazias para indicar erro
     ssidStr = ""; passwordStr = ""; servidorStr = ""; 
   }
+} 
+
+// --- Função Recursiva para Excluir Diretórios e Arquivos ---
+void removeDir(const char * path) {
+  File root = SD.open(path);
+  File file = root.openNextFile();
+  while(file){
+    if(file.isDirectory()){
+      Serial.print("Removendo diretorio: ");
+      Serial.println(file.name());
+      removeDir(file.name()); // Chamada recursiva para subdiretórios
+      SD.rmdir(file.name());  // Remove o diretório vazio
+    } else {
+      Serial.print("Removendo arquivo: ");
+      Serial.println(file.name());
+      SD.remove(file.name()); // Remove o arquivo
+    }
+    file = root.openNextFile();
+  }
+  root.close();
 }
+
 
 // --- Funções de exibição no TFT e busca de dados ---
 void exibeTelaMinecraft() {
@@ -183,7 +208,7 @@ void exibeTelaMinecraft() {
 void buscarDadosServidor() {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    http.begin(servidor); 
+    http.begin(servidor); // Usando o const char* inicializado no setup
     int resposta = http.GET(); 
 
     if (resposta == HTTP_CODE_OK) { 
@@ -226,10 +251,10 @@ void exibirStatus() {
   }
 
   tft.setTextColor(TFT_PURPLE);   tft.setCursor(10, 70);   tft.println("Rede Wi-Fi:");
-  tft.setTextColor(TFT_WHITE);    tft.setCursor(10, 90);   tft.println(ssid);
-
+  tft.setTextColor(TFT_WHITE);    tft.setCursor(10, 90);   tft.println(ssid); // Usa o const char* 'ssid'
+  
   tft.setTextColor(TFT_YELLOW);   tft.setCursor(10, 120); tft.println("Senha:");
-  tft.setTextColor(TFT_WHITE);    tft.setCursor(10, 140); tft.println(password);
+  tft.setTextColor(TFT_WHITE);    tft.setCursor(10, 140); tft.println(password); // Usa o const char* 'password'
 
   tft.setTextColor(TFT_BLUE);     tft.setCursor(10, 170); tft.print("Jogadores: ");
   tft.setTextColor(TFT_WHITE);    tft.println(jogadoresOnline);
@@ -262,16 +287,19 @@ void showTimeOnTFT() {
 // --- Funções para lidar com as requisições dos botões da web ---
 void handleShowTime() {
   currentDisplayMode = TIME_MODE; 
-  server.send(200, "text/plain", "Mostrando hora no TFT."); // Responde ao navegador, para evitar que o navegador fique esperando
+  server.send(200, "text/plain", "Mostrando hora no TFT."); 
 }
 
 void handleShowStatus() {
   currentDisplayMode = STATUS_MODE; 
-  server.send(200, "text/plain", "Mostrando status do servidor no TFT."); // Responde ao navegador
+  server.send(200, "text/plain", "Mostrando status do servidor no TFT."); 
 }
 
 // --- Função para mostrar o status detalhado na página web ---
 void handleStatusWeb() {
+  // Antes de enviar a página, assegure-se de que os dados estão atualizados
+  buscarDadosServidor(); 
+
   String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Status do Servidor Minecraft</title>";
   html += "<style>body{font-family: sans-serif; background-color: #f0f0f0; margin: 20px;}";
   html += "h1{color: #333;} p{color: #555;} .back-button button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }";
@@ -284,6 +312,77 @@ void handleStatusWeb() {
   html += "</body></html>";
   server.send(200, "text/html", html);
 }
+
+// --- Nova Função: Lida com a requisição de apagar todo o SD ---
+void handleClearSD() {
+  Serial.println("Recebida requisicao para apagar todo o SD...");
+  String responseMessage = "";
+  
+  SD.end(); // Desmonta o SD para garantir que não há arquivos abertos
+  delay(100);
+  
+  if (SD.begin(SD_CS)) { // Remonta o SD para ter certeza
+    File root = SD.open("/");
+    if (root) {
+      Serial.println("Iniciando exclusao de arquivos e diretorios no SD.");
+      File file = root.openNextFile();
+      while(file){
+        if(file.isDirectory()){
+          Serial.print("Apagando diretorio: ");
+          Serial.println(file.name());
+          // Nota: rmdir() só apaga diretorios vazios. Precisamos apagar recursivamente primeiro.
+          // A função removeDir() que adicionamos acima fará isso.
+          // Para apagar a raiz, precisamos de um loop que remova item por item.
+          String currentPath = "/" + String(file.name());
+          removeDir(currentPath.c_str()); // Chama a função recursiva para o subdiretório
+          SD.rmdir(currentPath.c_str()); // Remove o diretório após esvaziá-lo
+        } else {
+          Serial.print("Apagando arquivo: ");
+          Serial.println(file.name());
+          SD.remove("/" + String(file.name())); // Apaga o arquivo
+        }
+        file = root.openNextFile(); // Pega o próximo item APÓS a exclusão
+        // É importante reabrir o diretório ou listar de novo se algo for removido,
+        // mas loopNextFile geralmente lida com isso.
+      }
+      root.close(); // Fecha o diretório raiz
+      Serial.println("Concluido! Todos os arquivos e diretorios (exceto o arquivo de credenciais se recriado) foram apagados.");
+      responseMessage = "SD Card limpo com sucesso! As credenciais padrao serao recriadas se nao existirem.";
+      
+      // Chamar gerenciarCredenciais() novamente para recriar o arquivo padrão, se necessário.
+      // Isso é importante para que o ESP32 não perca suas credenciais ao apagar tudo.
+      gerenciarCredenciais(); 
+
+    } else {
+      Serial.println("Erro: Nao foi possivel abrir o diretorio raiz do SD para limpeza.");
+      responseMessage = "Erro ao limpar o SD: Nao foi possivel abrir o diretorio raiz.";
+    }
+  } else {
+    Serial.println("Erro: Nao foi possivel remontar o SD para limpeza.");
+    responseMessage = "Erro ao limpar o SD: Falha ao remontar o cartao.";
+  }
+
+  if (SD.rmdir("/Android")) {
+  Serial.println("Diretorio /Android removido com sucesso.");
+} else {
+  Serial.println("Falha ao remover diretorio /Android ou ja estava ausente.");
+}
+
+if (SD.rmdir("/DCIM")) {
+  Serial.println("Diretorio /DCIM removido com sucesso.");
+} else {
+  Serial.println("Falha ao remover diretorio /DCIM ou ja estava ausente.");
+}
+
+if (SD.rmdir("/VoiceRecorder")) {
+  Serial.println("Diretorio /VoiceRecorder removido com sucesso.");
+} else {
+  Serial.println("Falha ao remover diretorio /VoiceRecorder ou ja estava ausente.");
+}
+  
+  server.send(200, "text/html", "<html><body><h1>" + responseMessage + "</h1><p><a href='/'>Voltar</a></p></body></html>");
+}
+
 
 // --- Função para servir arquivos ou listar diretórios na página web ---
 void handleSdWeb() {
@@ -315,7 +414,8 @@ void handleSdWeb() {
     html += "li{margin-bottom: 5px; background-color: #fff; padding: 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}";
     html += "a{text-decoration: none; color: #007bff;} a:hover{text-decoration: underline;}";
     html += ".control-buttons button { padding: 10px 15px; margin: 5px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }";
-    html += ".control-buttons button:hover { background-color: #218838; }</style>"; 
+    html += ".control-buttons .danger-button { background-color: #dc3545; }"; // Estilo para botão de perigo
+    html += ".control-buttons .danger-button:hover { background-color: #c82333; }</style>"; 
     html += "</head><body><h1>Diretorio: " + path + "</h1>"; 
 
     // === Adiciona os botões de controle e informações aqui ===
@@ -325,6 +425,10 @@ void handleSdWeb() {
     html += "<button onclick=\"location.href='/showtime'\">Mostrar Hora no TFT</button>";
     html += "<button onclick=\"location.href='/showstatus'\">Mostrar Status Servidor no TFT</button>";
     html += "<p>Acesse com FTP (usuário: <strong>" + String(FTP_USER) + "</strong>, senha: <strong>" + String(FTP_PASS) + "</strong>) para gerenciar o SD.</p>";
+    
+    // NOVO BOTÃO: Apagar Tudo
+    html += "<button class='danger-button' onclick=\"if(confirm('Tem certeza que deseja apagar TODOS os arquivos e pastas do SD? Esta acao e irreversivel!')) location.href='/clear_sd'\">APAGAR TUDO NO SD</button>";
+    
     html += "</div><hr>"; 
     // =========================================================
 
@@ -374,7 +478,13 @@ void setup() {
   digitalWrite(LED_G, HIGH);
   digitalWrite(LED_B, HIGH);
 
-  gerenciarCredenciais();
+  // Carrega as credenciais do SD nas variáveis String globais
+  gerenciarCredenciais(); // Esta função já tenta inicializar o SD
+
+  // ATRIBUI OS PONTEIROS const char* para as Strings Lidas
+  ssid = ssidStr.c_str();
+  password = passwordStr.c_str();
+  servidor = servidorStr.c_str();
 
   if (ssidStr.isEmpty() || passwordStr.isEmpty() || servidorStr.isEmpty()) {
     Serial.println("Erro crítico: Não foi possível carregar as credenciais do SD. Interrompendo a execução.");
@@ -409,25 +519,31 @@ void setup() {
     Serial.print("Endereço IP: ");
     Serial.println(WiFi.localIP());
 
-    ftpSrv.begin(FTP_USER, FTP_PASS); 
-    Serial.println("=========================================");
-    Serial.println("         Servidor FTP Iniciado!");
-    Serial.print("IP do Aparelho: ");
-    Serial.println(WiFi.localIP());
-    Serial.print("Usuário FTP: ");
-    Serial.println(FTP_USER);
-    Serial.print("Senha FTP: ");
-    Serial.println(FTP_PASS);
-    Serial.println("Acesse usando um cliente FTP (FileZilla) ");
-    Serial.println("com o IP acima e as credenciais para gerenciar o SD.");
-    Serial.println("Lembre-se de usar 'FTP Simples (inseguro)' no cliente!");
-    Serial.println("=========================================");
-
+    // Verifica se o SD está inicializado ANTES de tentar iniciar o FTP
+    if (SD.cardSize() > 0) { // Uma forma simples de verificar se o SD.begin() teve sucesso
+        ftpSrv.begin(FTP_USER, FTP_PASS, &SD, FILESYSTEM_SD);
+        Serial.println("=========================================");
+        Serial.println("         Servidor FTP Iniciado!");
+        Serial.print("IP do Aparelho: ");
+        Serial.println(WiFi.localIP());
+        Serial.print("Usuário FTP: ");
+        Serial.println(FTP_USER);
+        Serial.print("Senha FTP: ");
+        Serial.println(FTP_PASS);
+        Serial.println("Acesse usando um cliente FTP (FileZilla) ");
+        Serial.println("com o IP acima e as credenciais para gerenciar o SD.");
+        Serial.println("Lembre-se de usar 'FTP Simples (inseguro)' no cliente!");
+        Serial.println("=========================================");
+    } else {
+        Serial.println("⚠️ SD Card não foi inicializado com sucesso. FTP NÃO INICIADO.");
+    }
+    
     // --- REGISTRO DAS ROTAS DO SERVIDOR WEB ---
     server.on("/", HTTP_GET, handleSdWeb); 
     server.on("/showtime", HTTP_GET, handleShowTime); 
     server.on("/showstatus", HTTP_GET, handleShowStatus); 
     server.on("/status", HTTP_GET, handleStatusWeb); 
+    server.on("/clear_sd", HTTP_GET, handleClearSD); // NOVA ROTA PARA APAGAR O SD
     
     server.begin(); 
     Serial.println("Servidor Web HTTP iniciado na porta 80.");
