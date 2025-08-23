@@ -1,7 +1,15 @@
-# PanelMinecraft
+# PanelMinecraft Version Linux e Windows e cs2 Windows painel
 PANEL MINECRAFT
 
+pip install Flask
+pip install psutil
+
+python app.py
+
 ![image](https://github.com/user-attachments/assets/89f26776-c838-4bf1-be60-a24bae94b4fa)
+
+<img width="1343" height="1036" alt="image" src="https://github.com/user-attachments/assets/1913eee5-fa4f-4237-912c-bc5fde3ec9ea" />
+
 
 
 https://github.com/user-attachments/assets/b97c8798-70a3-4e39-a5d2-1c58f077c853
