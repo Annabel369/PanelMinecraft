@@ -14,6 +14,17 @@ python app.py
 
 https://github.com/user-attachments/assets/b97c8798-70a3-4e39-a5d2-1c58f077c853
 
+<img width="622" height="473" alt="image" src="https://github.com/user-attachments/assets/1a4867a9-9d38-447c-810b-2b0e25ce56ed" />
+<img width="625" height="473" alt="image" src="https://github.com/user-attachments/assets/717338fd-5937-4534-b89f-34ebdfb198cc" />
+
+<img width="972" height="555" alt="image" src="https://github.com/user-attachments/assets/ea5791fa-5ca8-46aa-b1ab-d80a8f327973" />
+
+C:\Users\Astral\AppData\Local\Programs\Python\Python313\python.exe
+
+C:\Apache24\htdocs\minecraft_agent\app.py
+
+
+
 
 Próximos Passos (Continuando a Configuração do Agente Python)
 Agora que o usuário existe, podemos finalizar as configurações.
