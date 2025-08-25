@@ -141,6 +141,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <button type="submit" name="cs2_command_action" value="rcon">Executar Comando RCON</button>
         </form>
 
+        		<!-- Botão para entrar no servidor via Steam -->
+<a href="steam://connect/100.114.210.67:27018">
+    <button type="button">Entra no servidor</button>
+</a>
+
         <div class="output">
             <?php echo $output_message; ?>
         </div>
@@ -148,3 +153,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </body>
 
 </html>
+
