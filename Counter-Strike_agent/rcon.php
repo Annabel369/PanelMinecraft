@@ -1,16 +1,27 @@
 <?php
+/**
+ * Classe Rcon para comunicação com servidores Source Engine (CS2, CS:GO, etc.)
+ * Desenvolvida por Amauri Bueno dos Santos com suporte técnico da Copilot (Microsoft)
+ * Última atualização: 28/08/2025
+ *
+ * Esta classe permite autenticação via RCON, envio de comandos e leitura de respostas.
+ * Foi refinada para funcionar com servidores CS2 modernos, incluindo suporte a pacotes múltiplos e respostas limpas.
+ */
 
 class Rcon
 {
+    // Configurações básicas
     private $host;
     private $port;
     private $password;
     private $timeout;
 
+    // Estado interno
     private $socket;
     private $authorized = false;
     private $last_response;
 
+    // Constantes do protocolo RCON
     const PACKET_AUTHORIZE = 5;
     const PACKET_COMMAND = 6;
 
@@ -19,135 +30,145 @@ class Rcon
     const SERVERDATA_EXECCOMMAND = 2;
     const SERVERDATA_RESPONSE_VALUE = 0;
 
+    /**
+     * Construtor da classe
+     * @param string $host IP ou hostname do servidor
+     * @param int $port Porta RCON (geralmente igual à porta do jogo)
+     * @param string $password Senha RCON definida no servidor
+     * @param int $timeout Tempo limite de conexão
+     */
     public function __construct($host, $port, $password, $timeout)
     {
         $this->host = $host;
         $this->port = $port;
         $this->password = $password;
         $this->timeout = $timeout;
-
-        echo "🔧 [DEBUG] Rcon::__construct - Host: $host, Porta: $port, Timeout: $timeout<br>";
     }
 
+    /**
+     * Retorna a última resposta recebida do servidor
+     */
     public function get_response()
     {
         return $this->last_response;
     }
 
+    /**
+     * Estabelece conexão com o servidor e realiza autenticação RCON
+     */
     public function connect()
     {
-        echo "🔌 [DEBUG] Tentando conectar com fsockopen...<br>";
         @$this->socket = fsockopen($this->host, $this->port, $errno, $errstr, $this->timeout);
 
         if (!$this->socket) {
             $this->last_response = $errstr;
-            echo "❌ [DEBUG] Falha na conexão: $errstr (Erro $errno)<br>";
-            echo 'Server is offline.<br>';
             return false;
         }
 
-        echo "✅ [DEBUG] Conexão estabelecida. Configurando timeout de leitura...<br>";
         stream_set_timeout($this->socket, 3, 0);
-
-        echo "🔐 [DEBUG] Tentando autorizar com senha RCON...<br>";
-        $auth = $this->authorize();
-
-        if ($auth) {
-            echo "✅ [DEBUG] Autorizado com sucesso!<br>";
-            return true;
-        }
-
-        echo "❌ [DEBUG] Autorização falhou.<br>";
-        return false;
+        return $this->authorize();
     }
 
+    /**
+     * Encerra a conexão com o servidor
+     */
     public function disconnect()
     {
         if ($this->socket) {
-            echo "🔌 [DEBUG] Fechando conexão...<br>";
             fclose($this->socket);
         }
     }
 
+    /**
+     * Verifica se a conexão está autorizada
+     */
     public function is_connected()
     {
-        echo "🔍 [DEBUG] Verificando conexão: " . ($this->authorized ? "Autorizado" : "Não autorizado") . "<br>";
         return $this->authorized;
     }
 
+    /**
+     * Envia um comando RCON e retorna a resposta do servidor
+     * @param string $command Comando a ser executado
+     * @return string|false Resposta do servidor ou false em caso de erro
+     */
     public function send_command($command)
     {
         if (!$this->is_connected()) {
-            echo "⚠️ [DEBUG] Não conectado. Comando não será enviado.<br>";
             return false;
         }
 
-        echo "📤 [DEBUG] Enviando comando: $command<br>";
-        $this->write_packet(Rcon::PACKET_COMMAND, Rcon::SERVERDATA_EXECCOMMAND, $command);
+        $packet_id = rand(1000, 9999);
+        $this->write_packet($packet_id, self::SERVERDATA_EXECCOMMAND, $command);
+        $this->write_packet($packet_id, self::SERVERDATA_RESPONSE_VALUE, '');
 
-        echo "📥 [DEBUG] Lendo resposta do servidor...<br>";
-        $response_packet = $this->read_packet();
-
-        echo "📦 [DEBUG] Pacote recebido: ID={$response_packet['id']}, TYPE={$response_packet['type']}<br>";
-
-        if ($response_packet['id'] == Rcon::PACKET_COMMAND && $response_packet['type'] == Rcon::SERVERDATA_RESPONSE_VALUE) {
-            $this->last_response = $response_packet['body'];
-            echo "✅ [DEBUG] Resposta do servidor: <pre>" . htmlspecialchars($response_packet['body']) . "</pre>";
-            return $response_packet['body'];
+        $response = '';
+        for ($i = 0; $i < 10; $i++) {
+            $packet = $this->read_packet();
+            if ($packet['body'] === '' || $packet['body'] === "\x01") {
+                break;
+            }
+            $response .= $packet['body'];
         }
 
-        echo "⚠️ [DEBUG] Resposta inesperada ou vazia.<br>";
-        return false;
+        $this->last_response = $response;
+        return $response;
     }
 
+    /**
+     * Realiza autenticação com o servidor usando a senha RCON
+     */
     private function authorize()
     {
-        $this->write_packet(Rcon::PACKET_AUTHORIZE, Rcon::SERVERDATA_AUTH, $this->password);
-        $response_packet = $this->read_packet();
+        $packet_id = rand(1, 999);
+        $this->write_packet($packet_id, self::SERVERDATA_AUTH, $this->password);
 
-        echo "📦 [DEBUG] Pacote de autorização: ID={$response_packet['id']}, TYPE={$response_packet['type']}<br>";
+        $auth_success = false;
+        for ($i = 0; $i < 2; $i++) {
+            $packet = $this->read_packet();
+            if ($packet['type'] == self::SERVERDATA_AUTH_RESPONSE && $packet['id'] == $packet_id) {
+                $auth_success = true;
+                break;
+            }
+        }
 
-        if ($response_packet['type'] == Rcon::SERVERDATA_AUTH_RESPONSE && $response_packet['id'] == Rcon::PACKET_AUTHORIZE) {
+        if ($auth_success) {
             $this->authorized = true;
             return true;
         }
 
-        echo "❌ [DEBUG] Autorização negada pelo servidor.<br>";
         $this->disconnect();
         return false;
     }
 
+    /**
+     * Monta e envia um pacote RCON para o servidor
+     */
     private function write_packet($packet_id, $packet_type, $packet_body)
     {
-        echo "✏️ [DEBUG] Criando pacote: ID=$packet_id, TYPE=$packet_type, BODY=$packet_body<br>";
-
-        $packet = pack("VV", $packet_id, $packet_type);
-        $packet .= $packet_body . "\x00";
-        $packet .= "\x00";
-
+        $packet = pack("VV", $packet_id, $packet_type) . $packet_body . "\x00\x00";
         $packet_size = strlen($packet);
         $packet = pack("V", $packet_size) . $packet;
-
-        fwrite($this->socket, $packet, strlen($packet));
-        echo "📤 [DEBUG] Pacote enviado com tamanho $packet_size bytes<br>";
+        fwrite($this->socket, $packet);
     }
 
+    /**
+     * Lê um pacote RCON da resposta do servidor
+     * @return array Pacote com campos: id, type, body
+     */
     private function read_packet()
     {
         $size_data = fread($this->socket, 4);
         if (strlen($size_data) < 4) {
-            echo "⚠️ [DEBUG] Falha ao ler tamanho do pacote<br>";
             return ['id' => -1, 'type' => -1, 'body' => ''];
         }
 
-        $size_pack = unpack("V1size", $size_data);
-        $size = $size_pack['size'];
-        echo "📏 [DEBUG] Tamanho do pacote: $size bytes<br>";
-
+        $size = unpack("V", $size_data)[1];
         $packet_data = fread($this->socket, $size);
-        $packet_pack = unpack("V1id/V1type/a*body", $packet_data);
+        if (strlen($packet_data) < $size) {
+            return ['id' => -1, 'type' => -1, 'body' => ''];
+        }
 
-        echo "📥 [DEBUG] Dados do pacote lidos: ID={$packet_pack['id']}, TYPE={$packet_pack['type']}<br>";
-        return $packet_pack;
+        return unpack("V1id/V1type/a*body", $packet_data);
     }
-}
+}?>

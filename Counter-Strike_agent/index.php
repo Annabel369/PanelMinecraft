@@ -5,8 +5,8 @@
 require_once 'rcon.php';
 
 // Configurações do seu servidor CS2
-$cs2_rcon_host = '192.168.100.39';
-$cs2_rcon_port = 27515;
+$cs2_rcon_host = '100.114.210.67';
+$cs2_rcon_port = 27018;
 $cs2_rcon_password = 'GZPWA3PyZ7zonPf';
 $rcon_timeout = 3;
 
@@ -106,7 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="./favicon.png" type="image/png">
+	<link rel="icon" href="./favicon.png" type="image/png">
     <title>Gerenciar Counter-Strike 2</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #222; color: #fff; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
@@ -139,18 +139,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <form method="POST">
             <input type="text" name="rcon_command_input" placeholder="Ex: status">
             <button type="submit" name="cs2_command_action" value="rcon">Executar Comando RCON</button>
+			
         </form>
-
-        		<!-- Botão para entrar no servidor via Steam -->
-<a href="steam://connect/100.114.210.67:27018">
+		
+		<!-- Botão para entrar no servidor via Steam -->
+<a href="steam://connect/<?php echo $cs2_rcon_host . ':' . $cs2_rcon_port; ?>">
     <button type="button">Entra no servidor</button>
 </a>
+
+
+
 
         <div class="output">
             <?php echo $output_message; ?>
         </div>
     </div>
+	
+	<footer style="margin-top: 40px; font-size: 0.85em; color: #666;">
+    © 2025 — Criado por Amauri Bueno dos Santos com apoio da Copilot. Código limpo, servidor afiado.
+</footer>
 </body>
-
 </html>
-
