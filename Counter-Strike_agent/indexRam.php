@@ -1,5 +1,5 @@
 <?php
-require_once 'rcon.php';
+require_once 'rcon2.php';
 
 $cs2_rcon_host = '100.114.210.67';
 $cs2_rcon_port = 27018;
@@ -175,4 +175,5 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <footer style="margin-top: 40px; font-size: 0.85em; color: #666;">
     © 2025 — Criado por Amauri Bueno dos Santos com apoio da Copilot. Código limpo, servidor afiado.
 </footer>
+
 </html>
