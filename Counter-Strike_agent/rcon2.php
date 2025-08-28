@@ -1,6 +1,6 @@
 <?php
 /**
- * Classe Rcon para comunicação com servidores Source Engine (CS2, CS:GO, etc.)
+ * Classe Rcon2 para comunicação com servidores Source Engine (CS2, CS:GO, etc.)
  * Desenvolvida por Amauri Bueno dos Santos com suporte técnico da Copilot (Microsoft)
  * Última atualização: 28/08/2025
  *
