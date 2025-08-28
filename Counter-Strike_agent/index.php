@@ -1,8 +1,8 @@
 <?php
-// PHP para interagir com o agente Python e com a classe Rcon.php
+// PHP para interagir com o agente Python e com a classe Rcon2.php
 
 // Inclua a classe Rcon
-require_once 'rcon.php';
+require_once 'rcon2.php';
 
 // Configurações do seu servidor CS2
 $cs2_rcon_host = '100.114.210.67';
@@ -159,4 +159,5 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     © 2025 — Criado por Amauri Bueno dos Santos com apoio da Copilot. Código limpo, servidor afiado.
 </footer>
 </body>
+
 </html>
