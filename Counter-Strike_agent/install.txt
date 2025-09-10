@@ -1,4 +1,0 @@
-pip install Flask
-pip install psutil
-
-python app.py
