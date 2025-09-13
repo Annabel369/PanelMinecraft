@@ -1,7 +1,7 @@
 # config.py - Configurações para o agente de controle do servidor Minecraft no Windows
 
 # Configurações do RCON do Minecraft
-RCON_HOST = '100.107.34.48'
+RCON_HOST = '192.168.100.170'
 RCON_PORT = 25575
 RCON_PASSWORD = '12312sdafa134' # Use a senha real do seu server.properties
 
@@ -14,8 +14,8 @@ MINECRAFT_SERVER_DIR = r'C:\Servidor1.21.6_FabricMinecraft'
 # Adicionamos 'nogui' para que o servidor não abra a interface gráfica.
 MINECRAFT_START_COMMAND = [
     'java',  
-    '-Xmx4G',  
-    '-Xms2G',  
+    '-Xmx8G',  
+    '-Xms4G',  
     '-jar',  
     'fabric-server-launch.jar',  
     'nogui'

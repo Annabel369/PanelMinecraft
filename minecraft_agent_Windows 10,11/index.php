@@ -1,39 +1,45 @@
 <?php
-// PHP para interagir com o agente Python E com a classe Rcon.php
+// index.php - Painel de controle para gerenciar servidor Minecraft
 
-// Inclua a classe Rcon diretamente
-require_once 'rcon.php'; // Certifique-se de que 'Rcon.php' está no mesmo diretório ou em um caminho acessível
+// --- Configurações ---
+$agent_url = "http://localhost:5000";
+$version = "v1.0.1";
 
-// Configurações do seu servidor Minecraft RCON (para uso direto com Rcon.php)
-// ATENÇÃO: Essas configurações são usadas APENAS para os comandos RCON diretos,
-// não para o agente Python que tem suas próprias configurações de RCON.
-$minecraft_rcon_host = '127.0.0.1'; // Ou o IP do seu servidor Minecraft se for diferente
-$minecraft_rcon_port = 25575;      // Porta RCON padrão
-$minecraft_rcon_password = '12312sdafa134'; // A senha que você configurou no server.properties
-$rcon_timeout = 3;                 // Timeout em segundos
+// --- Lógica de Carregamento de Idioma ---
+$default_lang = "pt"; // Idioma padrão
+$lang_code = $_GET['lang'] ?? $default_lang;
 
-// URL base do seu agente Python (para Start/Stop/Status)
-$agent_url = "http://localhost:5000"; // Se o agente Python e o PHP estão no mesmo servidor
-                                      // Se o agente Python estiver em outra máquina, use o IP dela.
+$lang_file = "lang/{$lang_code}.json";
 
-// --- Funções para interagir com o agente Python (para Start/Stop/Status) ---
+// Verifica se o arquivo de idioma existe, caso contrário, usa o padrão.
+if (!file_exists($lang_file)) {
+    $lang_code = $default_lang;
+    $lang_file = "lang/{$lang_code}.json";
+}
+
+// Carrega o conteúdo do arquivo de idioma.
+$translations = json_decode(file_get_contents($lang_file), true);
+
+// --- Funções de comunicação com o agente Python ---
 function callPythonAgent($endpoint, $method = 'GET', $data = []) {
     global $agent_url;
+    global $translations;
+
     $url = $agent_url . $endpoint;
     $options = [
         'http' => [
             'method'        => $method,
             'header'        => 'Content-type: application/json',
             'content'       => json_encode($data),
-            'ignore_errors' => true // Para capturar erros HTTP (4xx, 5xx)
+            'ignore_errors' => true
         ]
     ];
-    $context  = stream_context_create($options);
+    $context = stream_context_create($options);
     $result = @file_get_contents($url, false, $context);
 
     if ($result === FALSE) {
         $error = error_get_last();
-        return ['success' => false, 'error' => 'Falha na conexão com o agente Python: ' . ($error ? $error['message'] : 'Erro desconhecido')];
+        return ['success' => false, 'error' => $translations['error_agent_connect'] . ($error ? $error['message'] : 'Erro desconhecido')];
     }
 
     $response_data = json_decode($result, true);
@@ -41,7 +47,7 @@ function callPythonAgent($endpoint, $method = 'GET', $data = []) {
         return ['success' => false, 'error' => 'Resposta inválida do agente Python: ' . $result];
     }
     
-    $status_code = 500; // Default para erro
+    $status_code = 500;
     if (isset($http_response_header) && is_array($http_response_header)) {
         preg_match('/HTTP\/[\d\.]+\s*(\d+)/', $http_response_header[0], $matches);
         $status_code = isset($matches[1]) ? (int)$matches[1] : 500;
@@ -54,105 +60,91 @@ function callPythonAgent($endpoint, $method = 'GET', $data = []) {
     return $response_data;
 }
 
-// --- Lógica de processamento no PHP (seus formulários) ---
+// --- Lógica de processamento dos formulários ---
 $minecraft_output = "";
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST["minecraft_command_action"])) {
         $action = $_POST["minecraft_command_action"];
         
-        switch ($action) {
-            case "start":
-                $response = callPythonAgent('/start_server', 'POST');
-                if (isset($response['success']) && $response['success']) {
-                    $minecraft_output = "Servidor Minecraft:<br><hr><center> <font color=lime>iniciado com sucesso! </center></br></font><hr>" . ($response['stdout'] ?? '') . ($response['stderr'] ?? '');
-                } else {
-                    $minecraft_output = "Erro ao iniciar servidor: " . ($response['error'] ?? 'Erro desconhecido');
-                }
-                break;
-            case "stop":
-                $response = callPythonAgent('/stop_server', 'POST');
-                if (isset($response['success']) && $response['success']) {
-                    $minecraft_output = "Servidor Minecraft:<br><hr><center> <font color=red>parado com sucesso! </center></br></font><hr>" . ($response['stdout'] ?? '') . ($response['stderr'] ?? '');
-                } else {
-                    $minecraft_output = "Erro ao parar servidor: " . ($response['error'] ?? 'Erro desconhecido');
-                }
-                break;
-            case "status":
-                $response = callPythonAgent('/server_status', 'GET');
-                if (isset($response['success']) && $response['success']) {
-                    $minecraft_output = "Status do Servidor: " . ($response['status'] ?? 'N/A') . "<hr><center>Rodando: " .
-    (isset($response['is_running']) && $response['is_running']
-        ? "<span style='color: #00ff00;'>✔ Sim</span><br>RAM em uso: <strong>" . ($response['ram_usage'] ?? 'N/A') . "</strong><hr>"
-        : "<span style='color: red;'>✘ Não</span><hr>") .
-    "</center>";
-                
-				
-				} else {
-                    $minecraft_output = "Erro ao obter status: " . ($response['error'] ?? 'Erro desconhecido');
-                }
-                break;
-            case "rcon":
-                $command_to_send = $_POST["rcon_command_input"] ?? '';
+        $actions = [
+            "start" => ["endpoint" => "/start_server", "method" => "POST", "success_msg" => $translations['output_success_start']],
+            "stop" => ["endpoint" => "/stop_server", "method" => "POST", "success_msg" => $translations['output_success_stop']],
+            "status" => ["endpoint" => "/server_status", "method" => "GET"],
+            "rcon" => ["endpoint" => "/rcon_command", "method" => "POST"],
+        ];
 
-                if (!empty($command_to_send)) {
-                    $rcon = new Rcon($minecraft_rcon_host, $minecraft_rcon_port, $minecraft_rcon_password, $rcon_timeout);
-
-                    if ($rcon->connect()) {
-                        $response_rcon = $rcon->send_command($command_to_send); // Use um nome diferente para a variável de resposta
-                        if ($response_rcon !== false) {
-                            $minecraft_output = "Comando RCON enviado: '{$command_to_send}'<br>Resposta: " . htmlspecialchars($response_rcon);
-                        } else {
-                            $minecraft_output = "Erro ao enviar comando RCON: " . htmlspecialchars($rcon->get_response());
-                        }
-                        $rcon->disconnect();
+        if (array_key_exists($action, $actions)) {
+            $config = $actions[$action];
+            $data = ($action === 'rcon') ? ['command' => $_POST["rcon_command_input"] ?? ''] : [];
+            
+            $response = callPythonAgent($config['endpoint'], $config['method'], $data);
+            
+            if (isset($response['success']) && $response['success']) {
+                if ($action === 'status') {
+                    $minecraft_output = $translations['output_status_running_prefix'] . ($response['status'] ?? 'N/A') . "<hr><center>" . $translations['output_status_running_status'] .
+                        (isset($response['is_running']) && $response['is_running']
+                            ? "<span style='color: #00ff00;'>{$translations['output_status_yes']}</span><br>{$translations['output_status_ram_usage']}<strong>" . ($response['ram_usage'] ?? 'N/A') . "</strong><hr>"
+                            : "<span style='color: red;'>{$translations['output_status_no']}</span><hr>") . "</center>";
+                } elseif ($action === 'rcon') {
+                    if (empty($data['command'])) {
+                        $minecraft_output = $translations['error_rcon_empty'];
                     } else {
-                        $minecraft_output = "Falha ao conectar ao RCON: " . htmlspecialchars($rcon->get_response());
+                        $minecraft_output = $translations['output_rcon_sent'] . "'{$data['command']}'<br>" . $translations['output_rcon_response'] . htmlspecialchars($response['response'] ?? 'N/A');
                     }
                 } else {
-                    $minecraft_output = "Por favor, digite um comando RCON para enviar.";
+                    $minecraft_output = $config['success_msg'];
                 }
-                break;
-            default:
-                $minecraft_output = "Ação desconhecida.";
-                break;
+            } else {
+                $minecraft_output = $translations['error_action'] . $action . "': " . ($response['error'] ?? 'Erro desconhecido');
+            }
+        } else {
+            $minecraft_output = $translations['error_unknown_action'];
         }
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="<?= htmlspecialchars($lang_code) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="icon" href="./favicon.png" type="image/png">
-    <title>Gerenciar Minecraft via Agente Python e RCON PHP</title>
+    <link rel="icon" href="./favicon.png" type="image/png">
+    <title><?= htmlspecialchars($translations['page_title']) ?></title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+    <div class="lang-selector">
+        <a href="?lang=pt">PT</a> |
+        <a href="?lang=en">EN</a>
+    </div>
+
     <div class="imagem-container">
         <img src="Minecraft.png" alt="Logo do Minecraft">
     </div>
+
     <div class="container">
-        <h2>Gerenciar Minecraft</h2>
+        <h2><?= htmlspecialchars($translations['main_heading']) ?></h2>
+        <span class="version-info"><?= htmlspecialchars($translations['version']) ?>: <?= htmlspecialchars($version) ?></span>
+        
         <form method="POST">
             <div>
-                <button type="submit" name="minecraft_command_action" value="start">Iniciar Servidor</button>
+                <button type="submit" name="minecraft_command_action" value="start"><?= htmlspecialchars($translations['start_button']) ?></button>
             </div>
             <div>
-                <button type="submit" name="minecraft_command_action" value="stop">Parar Servidor</button>
+                <button type="submit" name="minecraft_command_action" value="stop"><?= htmlspecialchars($translations['stop_button']) ?></button>
             </div>
             <div>
-                <button type="submit" name="minecraft_command_action" value="status">Ver Status</button>
+                <button type="submit" name="minecraft_command_action" value="status"><?= htmlspecialchars($translations['status_button']) ?></button>
             </div>
         </form>
 
         <hr style="border-color:#555; margin: 20px 0;">
 
-        <h3>Comando RCON</h3>
+        <h3><?= htmlspecialchars($translations['rcon_heading']) ?></h3>
         <form method="POST" id="rconForm">
-            <input type="text" name="rcon_command_input" placeholder="Ex: say Hello World" style="width: 100%;">
-            <button type="submit" name="minecraft_command_action" value="rcon">Executar Comando RCON</button>
+            <input type="text" name="rcon_command_input" placeholder="<?= htmlspecialchars($translations['rcon_placeholder']) ?>" style="width: 100%;">
+            <button type="submit" name="minecraft_command_action" value="rcon"><?= htmlspecialchars($translations['rcon_button']) ?></button>
         </form>
 
         <div class="output" style="margin-top: 20px;">
@@ -160,7 +152,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if (!empty($minecraft_output)) {
                 echo $minecraft_output;
             } else {
-                echo "Nenhum comando executado ainda.";
+                echo htmlspecialchars($translations['output_default']);
             }
             ?>
         </div>

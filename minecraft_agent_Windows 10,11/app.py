@@ -25,7 +25,9 @@ def find_minecraft_process():
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
             if proc.info['cmdline'] and 'java' in proc.info['name'].lower():
-                if any('server.jar' in arg or 'fabric-server-launch.jar' in arg for arg in proc.info['cmdline']):
+                # A verificação deve ser mais robusta, procurando o .jar específico.
+                # A função 'any' já é a melhor opção, então vamos mantê-la
+                if any('fabric-server-launch.jar' in arg for arg in proc.info['cmdline']):
                     logging.info(f"Processo encontrado: PID {proc.pid}")
                     return proc
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
@@ -39,6 +41,7 @@ def is_rcon_ready():
             mcr.command('say Verificação de status via RCON')
         return True
     except Exception as e:
+        # A mensagem de falha na conexão RCON é útil, vamos mantê-la.
         logging.warning(f"Falha na conexão RCON: {e}")
         return False
 
@@ -52,12 +55,17 @@ def start_server():
 
     try:
         logging.info(f"Iniciando servidor com comando: {MINECRAFT_START_COMMAND}")
+        
+        # Alteração chave: uso de 'shell=True' para melhor compatibilidade com o Windows.
+        # Adicione 'creationflags=subprocess.DETACHED_PROCESS' para garantir que o processo não seja
+        # encerrado com o agente, permitindo que ele rode em segundo plano.
         subprocess.Popen(
             MINECRAFT_START_COMMAND,
             cwd=MINECRAFT_SERVER_DIR,
-            creationflags=subprocess.CREATE_NO_WINDOW
+            creationflags=subprocess.DETACHED_PROCESS,
+            shell=True # Adicionando 'shell=True' para melhor compatibilidade com Windows
         )
-        time.sleep(2)
+        time.sleep(2) # Pequena pausa para o processo começar
         return jsonify({'success': True, 'message': 'Servidor iniciado com sucesso.'})
     except Exception as e:
         logging.error(f"Erro ao iniciar servidor: {e}")
@@ -69,22 +77,23 @@ def stop_server():
     process = find_minecraft_process()
     if not process:
         return jsonify({'success': False, 'error': 'Servidor não está rodando.'}), 404
-
+        
     try:
-        logging.info(f"Tentando encerrar processo PID {process.pid}")
-        process.terminate()
-        try:
+        # Envio de comando 'stop' via RCON para um encerramento seguro
+        if is_rcon_ready():
+            with MCRcon(RCON_HOST, RCON_PASSWORD, RCON_PORT) as mcr:
+                mcr.command('stop')
+            return jsonify({'success': True, 'message': 'Comando de parada enviado via RCON.'})
+        else:
+            # Se RCON não estiver pronto, use o método original de terminação
+            logging.warning("RCON não está pronto. Forçando o encerramento do processo.")
+            process.terminate()
             process.wait(timeout=10)
-        except psutil.TimeoutExpired:
-            logging.warning("Processo não respondeu ao terminate(). Forçando kill().")
-            process.kill()
-            process.wait(timeout=5)
-
-        if process.is_running():
-            logging.error("Processo ainda está ativo após tentativa de encerramento.")
-            return jsonify({'success': False, 'error': 'Falha ao encerrar o servidor.'}), 500
-
-        return jsonify({'success': True, 'message': 'Servidor encerrado com sucesso.'})
+            if process.is_running():
+                process.kill()
+                process.wait(timeout=5)
+            return jsonify({'success': True, 'message': 'Servidor encerrado por terminação de processo.'})
+            
     except Exception as e:
         logging.error(f"Erro ao encerrar servidor: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -103,7 +112,7 @@ def server_status():
             ram_mb = process.memory_info().rss / (1024 * 1024)
             ram_usage = f"{ram_mb:.2f} MB"
             is_ready = is_rcon_ready()
-            status = 'Rodando' if is_ready else 'Iniciando...'
+            status = 'Rodando e pronto' if is_ready else 'Rodando e iniciando...'
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             status = 'Erro de acesso'
             is_running = False
