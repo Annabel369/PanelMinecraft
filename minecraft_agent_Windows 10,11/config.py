@@ -12,6 +12,9 @@ MINECRAFT_SERVER_DIR = r'C:\Servidor1.21.6_FabricMinecraft'
 # Comando para iniciar o servidor Minecraft
 # O comando usa 'java.exe' e o caminho do .jar
 # Adicionamos 'nogui' para que o servidor não abra a interface gráfica.
+# Fabric
+"""
+
 MINECRAFT_START_COMMAND = [
     'java',  
     '-Xmx8G',  
@@ -19,7 +22,15 @@ MINECRAFT_START_COMMAND = [
     '-jar',  
     'fabric-server-launch.jar',  
     'nogui'
+]"""
+
+# Forge
+MINECRAFT_START_COMMAND = [
+    'java',
+    '@user_jvm_args.txt',
+    '@libraries/net/minecraftforge/forge/1.20.1-47.4.0/win_args.txt'
 ]
 
 # Porta que o agente Python vai escutar
+
 AGENT_PORT = 5000
