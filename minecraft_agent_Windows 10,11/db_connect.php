@@ -1,7 +1,7 @@
 <?php
 
 // Toggles whether user registration is allowed (true) or not (false).
-$allow_registration = true;
+$allow_registration = false;
 
 // Mysql Config
 $host = 'localhost';
