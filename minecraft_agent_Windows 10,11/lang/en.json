@@ -21,5 +21,26 @@
     "error_action": "Error executing action '",
     "error_rcon_empty": "Please enter an RCON command to send.",
     "error_unknown_action": "Unknown action.",
-    "error_agent_connect": "Failed to connect to Python agent: "
+    "error_agent_connect": "Failed to connect to Python agent: ",
+	
+	"login_h2": "Login",
+  "username_label": "Username",
+  "password_label": "Password",
+  "login_button": "Login",
+  "db_success_message": "User 'admin' with password 'admin123' and the 'users' table were created. Try logging in now.",
+  "login_error_message": "Incorrect username or password. 😔",
+  "register_link": "Register",
+  
+  "register_title": "User Registration",
+  "register_h1": "Register",
+  "register_h2": "Create New User",
+  "username_label": "Username",
+  "password_label": "Password",
+  "register_button": "Register",
+  "registration_disabled": "New user registration is currently disabled.",
+  "user_exists_error": "This username already exists. Please choose a different one.",
+  "empty_fields_error": "Username and password cannot be empty.",
+  "registration_success": "User '%s' created successfully!",
+  "database_error": "Database error",
+  "contact_admin": "Registration is currently disabled. Please contact an admin for access."
 }

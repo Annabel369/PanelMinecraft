@@ -21,5 +21,30 @@
     "error_action": "Erro ao executar ação '",
     "error_rcon_empty": "Por favor, digite um comando RCON para enviar.",
     "error_unknown_action": "Ação desconhecida.",
-    "error_agent_connect": "Falha na conexão com o agente Python: "
+    "error_agent_connect": "Falha na conexão com o agente Python: ",
+	
+	 
+  "login_h2": "Login",  
+  "username_label": "Usuário",
+  "password_label": "Senha",
+  "login_button": "Entrar",
+  "db_success_message": "Tabela 'users' criada e usuário 'admin' com senha 'admin123' adicionado. Tente fazer o login agora.",
+  "login_error_message": "Usuário ou senha incorretos. 😔",
+  "register_link": "Registrar-se",
+  
+  "register_title": "Registro de Usuário",
+  "register_h1": "Registro",
+  "register_h2": "Criar Novo Usuário",
+  "username_label": "Nome de Usuário",
+  "password_label": "Senha",
+  "register_button": "Registrar",
+  "registration_disabled": "O registro de novos usuários está desativado no momento.",
+  "user_exists_error": "Este nome de usuário já existe. Por favor, escolha outro.",
+  "empty_fields_error": "Nome de usuário e senha não podem estar vazios.",
+  "registration_success": "Usuário '%s' criado com sucesso!",
+  "database_error": "Erro no banco de dados",
+  "contact_admin": "O registro está desativado. Por favor, entre em contato com um administrador para obter acesso."
+
+	
+	
 }
