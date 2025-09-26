@@ -197,10 +197,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <input type="password" id="password" name="password" required
                        style="padding: 0.75rem; border-radius: 8px; border: none; background-color: #2a2a2a; color: #f0f0f0;">
                 
-                <button type="submit" name="minecraft_command_action" value="status"
-                        style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: linear-gradient(45deg, var(--accent-purple), var(--accent-pink)); border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer;">
-                    <?= $lang['login_button'] ?>
-                </button>
+
+                <button type="submit" name="minecraft_command_action" value="status"> <?= $lang['login_button'] ?></button>
+            </form>
             </form>
 
             <?php 
@@ -215,4 +214,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 </body>
+
 </html>
