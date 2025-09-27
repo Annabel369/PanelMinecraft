@@ -1,13 +1,13 @@
 # PanelMinecraft Version Linux e Windows e cs2 Windows painel
 PANEL MINECRAFT
 
-pip install Flask
-pip install psutil
-pip install mcrcon
+    pip install Flask
+    pip install psutil
+    pip install mcrcon
 
 
 
-python app.py
+    python app.py
 
 ![image](https://github.com/user-attachments/assets/89f26776-c838-4bf1-be60-a24bae94b4fa)
 
