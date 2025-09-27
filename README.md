@@ -3,10 +3,28 @@ PANEL MINECRAFT
 
 pip install Flask
 pip install psutil
+pip install mcrcon
+
+
 
 python app.py
 
 ![image](https://github.com/user-attachments/assets/89f26776-c838-4bf1-be60-a24bae94b4fa)
+
+test
+
+Seu agente Flask define regras estritas sobre quais métodos podem ser usados em cada rota:
+
+Endpoint	Função	Método Necessário
+
+    /rcon_command	Enviar comando RCON	POST
+    /start_server	Iniciar servidor	POST
+    /stop_server	Parar servidor	POST
+    /server_status	Obter status	GET
+
+    curl -X POST      -H "Content-Type: application/json"      -d '{"command": "list"}'      http://192.168.100.170:5000/rcon_command
+
+    curl -X GET http://192.168.100.170:5000/server_status
 
 web
 C:\Apache24\htdocs\minecraft_agent
