@@ -7,11 +7,13 @@ import os
 import psutil
 import time
 from mcrcon import MCRcon
+from functools import wraps
 # Importa as configurações do arquivo config.py
 from config import (
     RCON_HOST, RCON_PORT, RCON_PASSWORD,
     MINECRAFT_START_COMMAND, AGENT_PORT,
-    MINECRAFT_SERVER_DIR
+    MINECRAFT_SERVER_DIR,
+    ALLOWED_IPS # NOVO: Importa a lista de IPs de config.py
 )
 
 # Configuração de logging
@@ -19,31 +21,59 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 app = Flask(__name__)
 
+# --- Configuração de Segurança (IP Whitelist) ---
+# A lista ALLOWED_IPS foi movida para config.py para melhor organização.
+
+def ip_whitelist_required(f):
+    """Decorator que verifica se o IP do solicitante está na lista de permissão."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        client_ip = request.remote_addr
+        # Acesso a ALLOWED_IPS agora é feito via import de config
+        if client_ip not in ALLOWED_IPS: 
+            logging.warning(f"Acesso negado: Tentativa de IP não permitido: {client_ip} para {request.path}")
+            return jsonify({
+                'success': False, 
+                'error': f'Seu IP ({client_ip}) não tem permissão para usar este endpoint.'
+            }), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
 # --- Funções de gerenciamento ---
 
 def find_minecraft_process():
-    """Localiza o processo Java que executa o servidor Minecraft."""
+    """
+    Localiza o processo Java que executa o servidor Minecraft.
+    Usa uma verificação dupla: pelo CWD (Diretório de Trabalho) e pela linha de comando (CMDLINE).
+    """
     # Garante que o diretório de destino está normalizado para comparação
     target_dir = os.path.normcase(os.path.abspath(MINECRAFT_SERVER_DIR))
     logging.debug(f"Procurando por processo no diretório: {target_dir}")
     
     for proc in psutil.process_iter(['pid', 'name', 'cmdline', 'cwd']):
         try:
+            # Pega a linha de comando e normaliza para comparação
+            cmdline = [os.path.normcase(arg) for arg in proc.info['cmdline']] if proc.info['cmdline'] else []
+            proc_cwd = os.path.normcase(proc.info['cwd']) if proc.info['cwd'] else None
+            
             # 1. Deve ser um processo Java
-            if proc.info['cmdline'] and 'java' in proc.info['name'].lower():
-                # 2. Verifica se o Diretório de Trabalho (Current Working Directory - CWD)
-                # do processo corresponde ao diretório do servidor.
-                proc_cwd = os.path.normcase(proc.info['cwd']) if proc.info['cwd'] else None
+            if 'java' in proc.info['name'].lower():
                 
-                # Esta é uma verificação mais robusta para servidores Forge ou Fabric
+                # 2. Verifica se o CWD corresponde ao diretório do servidor (MÉTODO 1)
                 if proc_cwd and proc_cwd == target_dir:
-                    logging.info(f"Processo Minecraft encontrado: PID {proc.pid} no CWD {proc_cwd}")
+                    logging.info(f"Processo Minecraft encontrado via CWD: PID {proc.pid}")
+                    return proc
+                
+                # 3. Verifica se a linha de comando contém o caminho do diretório do servidor (MÉTODO 2: Fallback)
+                # Isso cobre casos onde o servidor foi iniciado de um script ou wrapper que não define o CWD.
+                if any(target_dir in arg for arg in cmdline):
+                    logging.info(f"Processo Minecraft encontrado via CMDLINE: PID {proc.pid}")
                     return proc
                 
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
         except Exception as e:
-            # Captura exceções ao acessar proc.info (pode acontecer em ambientes restritos)
+            # Captura exceções ao acessar proc.info
             logging.debug(f"Erro ao inspecionar processo {proc.pid}: {e}")
             continue
             
@@ -64,6 +94,7 @@ def is_rcon_ready():
 # --- Endpoints ---
 
 @app.route('/start_server', methods=['POST'])
+@ip_whitelist_required
 def start_server():
     """Inicia o servidor Minecraft."""
     if find_minecraft_process():
@@ -94,6 +125,7 @@ def start_server():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/stop_server', methods=['POST'])
+@ip_whitelist_required
 def stop_server():
     """Encerra o servidor Minecraft de forma segura (via RCON) ou forçada."""
     process = find_minecraft_process()
@@ -153,6 +185,7 @@ def server_status():
     }), 200
 
 @app.route('/rcon_command', methods=['POST'])
+@ip_whitelist_required
 def rcon_command():
     """Executa comandos RCON no servidor Minecraft."""
     data = request.get_json()
