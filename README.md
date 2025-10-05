@@ -1,6 +1,8 @@
 # PanelMinecraft Version Linux e Windows e cs2 Windows painel
 PANEL MINECRAFT
 
+Dica os Arquivo de fora sao de Linux os de dentro da pasta Windows e de Windows 10 e 11
+
     pip install Flask
     pip install psutil
     pip install mcrcon
