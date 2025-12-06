@@ -192,30 +192,50 @@ void exibeTelaMinecraft() {
     
     tft.fillRect(x, y, tam, tam, TFT_GREEN); // Desenha o quadrado principal (CABEÇA DO CREEPER)
 
-    // Agora desenhamos os pixels pretos com coordenadas e tamanhos INTEIROS (sem decimal!)
-    
-    // --- Olhos/Rosto do Creeper (Baseado em uma grade 12x12, onde cada bloco é 10x10) ---
-    // xOffset e yOffset são o ponto de início do "pixel" na grade
-    
-    // Olho Esquerdo Superior (Grid: 3,2) (Tamanho: 2x2 blocks)
-    int xOffset1 = 3 * pixelSize; 
-    int yOffset1 = 2 * pixelSize;
-    tft.fillRect(x + xOffset1, y + yOffset1, pixelSize * 2, pixelSize * 2, TFT_BLACK); 
-
-    // Olho Direito Superior (Grid: 7,2) (Tamanho: 2x2 blocks)
-    int xOffset2 = 7 * pixelSize;
-    int yOffset2 = 2 * pixelSize;
-    tft.fillRect(x + xOffset2, y + yOffset2, pixelSize * 2, pixelSize * 2, TFT_BLACK); 
-
-    // Boca (Grande Retângulo central) (Grid: 4, 6) (Tamanho: 4x4 blocks)
-    int xOffset3 = 4 * pixelSize;
-    int yOffset3 = 6 * pixelSize;
-    tft.fillRect(x + xOffset3, y + yOffset3, pixelSize * 4, pixelSize * 4, TFT_BLACK); 
-
-    // Nariz/Ponta da boca (Central, 5,5) (Tamanho: 2x1 blocks)
-    int xOffset4 = 5 * pixelSize;
-    int yOffset4 = 5 * pixelSize;
-    tft.fillRect(x + xOffset4, y + yOffset4, pixelSize * 2, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 30, y + 10, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 40, y + 10, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 70, y + 10, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 80, y + 10, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 20, y + 20, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 30, y + 20, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 40, y + 20, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 70, y + 20, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 80, y + 20, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 90, y + 20, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 20, y + 30, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 30, y + 30, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 40, y + 30, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 70, y + 30, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 80, y + 30, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 90, y + 30, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 50, y + 50, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 60, y + 50, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 30, y + 60, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 40, y + 60, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 50, y + 60, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 60, y + 60, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 70, y + 60, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 80, y + 60, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 30, y + 70, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 40, y + 70, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 50, y + 70, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 60, y + 70, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 70, y + 70, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 80, y + 70, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 30, y + 80, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 40, y + 80, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 50, y + 80, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 60, y + 80, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 70, y + 80, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 80, y + 80, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 30, y + 90, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 40, y + 90, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 70, y + 90, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 80, y + 90, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 30, y + 100, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 40, y + 100, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 70, y + 100, pixelSize, pixelSize, TFT_BLACK);
+    tft.fillRect(x + 80, y + 100, pixelSize, pixelSize, TFT_BLACK);
 
 
     // O seu segundo código detalhado parece ser baseado em uma grade de 33 blocos,
