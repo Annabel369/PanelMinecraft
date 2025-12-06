@@ -324,6 +324,10 @@ crontab -e
 
 -----------------------------------------------------------------------------------------------------------------
 
+ESP32-2432S028
+
+
+http://arduino.esp8266.com/stable/package_esp8266com_index.json
 
 
 # User_Setup.h
@@ -335,6 +339,9 @@ Arquivo de configuração para a biblioteca TFT_eSPI. Precisa ser colocado no di
 Arquivo de configuração da biblioteca LVGL. Precisa ser colocado no diretório de bibliotecas do Arduino.
 
 Fonte: https://randomnerdtutorials.com/lvgl-cheap-yellow-display-esp32-2432s028r/
+
+include
+https://github.com/Annabel369/ESP32FTPServer
 
 
 
