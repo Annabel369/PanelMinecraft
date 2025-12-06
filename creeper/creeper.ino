@@ -7,6 +7,7 @@
 #include <NTPClient.h>    // Para obter a hora da internet
 #include <WiFiUdp.h>      // Necessário para o NTPClient
 
+
 // Biblioteca FTP Server (kept for file management, if you want to use it)
 #include <ESP32FtpServer.h> 
 
@@ -172,37 +173,73 @@ void removeDir(const char * path) {
 }
 
 
-// --- Funções de exibição no TFT e busca de dados ---
+// --- Funções de exibição no TFT e busca de dados (CORRIGIDO SEM PONTO FLUTUANTE) ---
 void exibeTelaMinecraft() {
-  tft.fillScreen(TFT_BLACK);
-  tft.setRotation(0);
-  tft.setTextSize(4);
-  tft.setTextColor(TFT_GREEN, TFT_BLACK);
-  tft.setCursor(20, 20);
-  tft.println("MINECRAFT");
+    tft.fillScreen(TFT_BLACK);
+    tft.setRotation(0);
+    tft.setTextSize(4);
+    tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    tft.setCursor(20, 20);
+    tft.println("MINECRAFT");
 
-  int x = 50, y = 80, tam = 120;
-  tft.fillRect(x, y, tam, tam, TFT_GREEN);
-  tft.fillRect(x + 25, y + 20, 25, 25, TFT_BLACK);
-  tft.fillRect(x + 70, y + 20, 25, 25, TFT_BLACK);
-  tft.fillRect(x + 40, y + 50, 40, 40, TFT_BLACK);
-  tft.fillRect(x + 15, y + 92, 15, 22, TFT_BLACK);
-  tft.fillRect(x + 90, y + 90, 15, 25, TFT_BLACK);
+    int x = 50; // Posição X inicial do quadrado principal
+    int y = 80; // Posição Y inicial do quadrado principal
+    int tam = 120; // Tamanho do quadrado principal (120x120 pixels)
 
-  for (int i = 0; i < 5; i++) {
-    delay(500);
+    // Fator de escala: O quadrado de 120x120 será dividido em uma grade de 12x12
+    // Cada 'pixel' do desenho terá 10x10 pixels reais (120 / 12 = 10)
+    int pixelSize = 10; 
+    
+    tft.fillRect(x, y, tam, tam, TFT_GREEN); // Desenha o quadrado principal (CABEÇA DO CREEPER)
+
+    // Agora desenhamos os pixels pretos com coordenadas e tamanhos INTEIROS (sem decimal!)
+    
+    // --- Olhos/Rosto do Creeper (Baseado em uma grade 12x12, onde cada bloco é 10x10) ---
+    // xOffset e yOffset são o ponto de início do "pixel" na grade
+    
+    // Olho Esquerdo Superior (Grid: 3,2) (Tamanho: 2x2 blocks)
+    int xOffset1 = 3 * pixelSize; 
+    int yOffset1 = 2 * pixelSize;
+    tft.fillRect(x + xOffset1, y + yOffset1, pixelSize * 2, pixelSize * 2, TFT_BLACK); 
+
+    // Olho Direito Superior (Grid: 7,2) (Tamanho: 2x2 blocks)
+    int xOffset2 = 7 * pixelSize;
+    int yOffset2 = 2 * pixelSize;
+    tft.fillRect(x + xOffset2, y + yOffset2, pixelSize * 2, pixelSize * 2, TFT_BLACK); 
+
+    // Boca (Grande Retângulo central) (Grid: 4, 6) (Tamanho: 4x4 blocks)
+    int xOffset3 = 4 * pixelSize;
+    int yOffset3 = 6 * pixelSize;
+    tft.fillRect(x + xOffset3, y + yOffset3, pixelSize * 4, pixelSize * 4, TFT_BLACK); 
+
+    // Nariz/Ponta da boca (Central, 5,5) (Tamanho: 2x1 blocks)
+    int xOffset4 = 5 * pixelSize;
+    int yOffset4 = 5 * pixelSize;
+    tft.fillRect(x + xOffset4, y + yOffset4, pixelSize * 2, pixelSize, TFT_BLACK);
+
+
+    // O seu segundo código detalhado parece ser baseado em uma grade de 33 blocos,
+    // o que levou aos decimais. Para desenhar o rosto do Creeper com a aparência correta
+    // em uma grade 12x12 (que tem blocos de 10x10 pixels), a lógica acima é o suficiente.
+    // O rosto padrão do Creeper é geralmente representado com os olhos e a boca.
+    
+    // ----------------------------------------------------------------------------------
+    
+    // Animação 'Start Server...' (mantida a lógica original)
     tft.setTextSize(2);
     tft.setCursor(50, 230);
-    if (i % 2 == 0) {
-      tft.setTextColor(TFT_WHITE, TFT_BLACK);
-      tft.println("Start Server...");
-    } else {
-      tft.fillRect(50, 230, 200, 20, TFT_BLACK); 
+    for (int i = 0; i < 5; i++) {
+        delay(500);
+        if (i % 2 == 0) {
+            tft.setTextColor(TFT_WHITE, TFT_BLACK);
+            tft.println("Start Server...");
+        } else {
+            tft.fillRect(50, 230, 200, 20, TFT_BLACK);
+        }
     }
-  }
 
-  delay(800);
-  tft.fillScreen(TFT_BLACK);
+    delay(800);
+    tft.fillScreen(TFT_BLACK);
 }
 
 void buscarDadosServidor() {
@@ -264,24 +301,58 @@ void exibirStatus() {
   tft.setTextColor(TFT_WHITE);    tft.setCursor(10, 220); tft.println(nomes);
 }
 
-// --- Função para mostrar a hora no TFT ---
-void showTimeOnTFT() {
-  tft.fillScreen(TFT_BLACK);
-  tft.setTextSize(3); 
-  tft.setTextColor(TFT_CYAN, TFT_BLACK);
-  tft.setCursor(10, 50);
-  tft.println("Hora Atual:");
 
-  tft.setTextSize(5); 
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.setCursor(10, 100);
-  tft.println(timeClient.getFormattedTime()); 
-  
-  tft.setTextSize(2);
-  tft.setCursor(10, 200);
-  tft.setTextColor(TFT_GREEN);
-  tft.println("Controle via Web:");
-  tft.println("IP: " + WiFi.localIP().toString());
+// --- Função para mostrar a hora no TFT com formato AM/PM ---
+void showTimeOnTFT() {
+    // 1. Obter a hora no formato 24h (HH:MM:SS)
+    String formattedTime = timeClient.getFormattedTime(); 
+    
+    // 2. Extrair a string da hora (os dois primeiros caracteres)
+    String hourStr = formattedTime.substring(0, 2);
+    int hour = hourStr.toInt(); // Converter para número inteiro
+    
+    // 3. Inicializar a string de sufixo (AM ou PM)
+    String ampm = "AM";
+    
+    // 4. Lógica de conversão para 12h (AM/PM)
+    if (hour >= 12) {
+        ampm = "PM";
+    }
+    
+    if (hour > 12) {
+        hour = hour - 12; // 13h -> 1h, 14h -> 2h, etc.
+    } else if (hour == 0) {
+        hour = 12; // 00h (meia-noite) -> 12h AM
+    }
+    
+    // 5. Reformatar a string da hora
+    // Converte a hora de volta para string, garantindo um zero à esquerda se for menor que 10
+    String displayHour = (hour < 10) ? ("0" + String(hour)) : String(hour);
+    
+    // Pega o restante da string de tempo ( :MM:SS ) e junta com a nova hora e o AM/PM
+    String timeOnly = formattedTime.substring(3); // Pega :MM:SS
+    String finalTime = displayHour + ":" + timeOnly.substring(0, 5) + " " + ampm; // O substring(0, 5) pega apenas MM:SS para evitar HH:MM:SS
+    // Note que usei 0, 5 para pegar MM:SS, ignorando os segundos no display, o que é comum. 
+    // Se quiser os segundos, use timeOnly.substring(0) ou remova o substring.
+
+    // ----------------------------------------------------------------------------------
+    
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextSize(3); 
+    tft.setTextColor(TFT_CYAN, TFT_BLACK);
+    tft.setCursor(10, 50);
+    tft.println("Hora Atual:");
+
+    tft.setTextSize(5); 
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setCursor(10, 100);
+    tft.println(finalTime); // Exibe a hora no novo formato (12h AM/PM)
+    
+    tft.setTextSize(2);
+    tft.setCursor(10, 200);
+    tft.setTextColor(TFT_GREEN);
+    tft.println("Controle via Web:");
+    tft.println("IP: " + WiFi.localIP().toString());
 }
 
 // --- Funções para lidar com as requisições dos botões da web ---
@@ -385,83 +456,109 @@ if (SD.rmdir("/VoiceRecorder")) {
 
 
 // --- Função para servir arquivos ou listar diretórios na página web ---
+// --- Função Corrigida para Servir Arquivos ou Listar Diretórios na Página Web ---
 void handleSdWeb() {
-  String path = server.uri(); 
-  Serial.print("Requisição Web para: ");
-  Serial.println(path);
-
-  if (!path.startsWith("/")) {
-    path = "/" + path;
-  }
-
-  File root; 
-  if (path.endsWith("/")) { 
-    root = SD.open(path);
-  } else { 
-    root = SD.open(path, FILE_READ);
-  }
-
-  if (!root) {
-    server.send(404, "text/plain", "404 Not Found (Arquivo/Pasta nao encontrada no SD)");
-    Serial.println("404 Not Found: " + path);
-    return;
-  }
-
-  if (root.isDirectory()) {
-    String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Diretorio: " + path + "</title>";
-    html += "<style>body{font-family: sans-serif; background-color: #f0f0f0; margin: 20px;}";
-    html += "h1{color: #333;} ul{list-style-type: none; padding: 0;}";
-    html += "li{margin-bottom: 5px; background-color: #fff; padding: 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}";
-    html += "a{text-decoration: none; color: #007bff;} a:hover{text-decoration: underline;}";
-    html += ".control-buttons button { padding: 10px 15px; margin: 5px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }";
-    html += ".control-buttons .danger-button { background-color: #dc3545; }"; // Estilo para botão de perigo
-    html += ".control-buttons .danger-button:hover { background-color: #c82333; }</style>"; 
-    html += "</head><body><h1>Diretorio: " + path + "</h1>"; 
-
-    // === Adiciona os botões de controle e informações aqui ===
-    html += "<div class='control-buttons'>";
-    html += "<p><strong>IP do ESP32:</strong> " + WiFi.localIP().toString() + "</p>";
-    html += "<p><strong>Status do Servidor Minecraft:</strong> <a href=\"/status\">Ver Status Detalhado</a></p>";
-    html += "<button onclick=\"location.href='/showtime'\">Mostrar Hora no TFT</button>";
-    html += "<button onclick=\"location.href='/showstatus'\">Mostrar Status Servidor no TFT</button>";
-    html += "<p>Acesse com FTP (usuário: <strong>" + String(FTP_USER) + "</strong>, senha: <strong>" + String(FTP_PASS) + "</strong>) para gerenciar o SD.</p>";
-    
-    // NOVO BOTÃO: Apagar Tudo
-    html += "<button class='danger-button' onclick=\"if(confirm('Tem certeza que deseja apagar TODOS os arquivos e pastas do SD? Esta acao e irreversivel!')) location.href='/clear_sd'\">APAGAR TUDO NO SD</button>";
-    
-    html += "</div><hr>"; 
-    // =========================================================
-
-    if (path != "/") {
-      String parentPath = path.substring(0, path.lastIndexOf('/'));
-      if (parentPath.length() == 0) parentPath = "/";
-      html += "<li><a href=\"" + parentPath + "\">[VOLTAR] ..</a></li>";
-    }
-
-    File file = root.openNextFile(); 
-    while (file) {
-      html += "<li>";
-      if (file.isDirectory()) {
-        html += "[DIR] <a href=\"";
-        html += path + file.name() + "/"; 
-        html += "\">" + String(file.name()) + "</a>";
-      } else {
-        html += "[FILE] <a href=\"";
-        html += path + file.name(); 
-        html += "\">" + String(file.name()) + "</a> (" + String(file.size()) + " bytes)";
-      }
-      html += "</li>";
-      file = root.openNextFile();
-    }
-    root.close();
-    html += "</ul></body></html>";
-    server.send(200, "text/html", html);
-  } else { 
-    Serial.print("Servindo arquivo: ");
+    String path = server.uri(); 
+    Serial.print("Requisição Web para: ");
     Serial.println(path);
-    server.streamFile(root, "application/octet-stream"); 
-    root.close();
-  }
+
+    if (!path.startsWith("/")) {
+        path = "/" + path;
+    }
+
+    File root; 
+    
+    // --- 1. SE FOR UM DIRETÓRIO (ou se o path termina com '/') ---
+    if (path.endsWith("/")) { 
+        root = SD.open(path);
+        
+        if (!root) {
+            server.send(404, "text/plain", "404 Not Found (Diretorio nao encontrado no SD)");
+            Serial.println("404 Not Found (Diretorio): " + path);
+            return;
+        }
+        
+        // Verifica novamente se é realmente um diretório (segurança extra)
+        if (root.isDirectory()) {
+            String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Diretorio: " + path + "</title>";
+            html += "<style>body{font-family: sans-serif; background-color: #f0f0f0; margin: 20px;}";
+            html += "h1{color: #333;} ul{list-style-type: none; padding: 0;}";
+            html += "li{margin-bottom: 5px; background-color: #fff; padding: 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}";
+            html += "a{text-decoration: none; color: #007bff;} a:hover{text-decoration: underline;}";
+            html += ".control-buttons button { padding: 10px 15px; margin: 5px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }";
+            html += ".control-buttons .danger-button { background-color: #dc3545; }"; // Estilo para botão de perigo
+            html += ".control-buttons .danger-button:hover { background-color: #c82333; }</style>"; 
+            html += "</head><body><h1>Diretorio: " + path + "</h1>"; 
+
+            // === Adiciona os botões de controle e informações aqui ===
+            html += "<div class='control-buttons'>";
+            html += "<p><strong>IP do ESP32:</strong> " + WiFi.localIP().toString() + "</p>";
+            html += "<p><strong>Status do Servidor Minecraft:</strong> <a href=\"/status\">Ver Status Detalhado</a></p>";
+            html += "<button onclick=\"location.href='/showtime'\">Mostrar Hora no TFT</button>";
+            html += "<button onclick=\"location.href='/showstatus'\">Mostrar Status Servidor no TFT</button>";
+            html += "<p>Acesse com FTP (usuário: <strong>" + String(FTP_USER) + "</strong>, senha: <strong>" + String(FTP_PASS) + "</strong>) para gerenciar o SD.</p>";
+            
+            // NOVO BOTÃO: Apagar Tudo
+            html += "<button class='danger-button' onclick=\"if(confirm('Tem certeza que deseja apagar TODOS os arquivos e pastas do SD? Esta acao e irreversivel!')) location.href='/clear_sd'\">APAGAR TUDO NO SD</button>";
+            
+            html += "</div><hr>"; 
+            // =========================================================
+
+            if (path != "/") {
+                String parentPath = path.substring(0, path.lastIndexOf('/'));
+                if (parentPath.length() == 0) parentPath = "/";
+                html += "<li><a href=\"" + parentPath + "\">[VOLTAR] ..</a></li>";
+            }
+
+            File file = root.openNextFile(); 
+            while (file) {
+                html += "<li>";
+                if (file.isDirectory()) {
+                    html += "[DIR] <a href=\"";
+                    html += path + file.name() + "/"; 
+                    html += "\">" + String(file.name()) + "</a>";
+                } else {
+                    // O link para arquivo não termina com /
+                    html += "[FILE] <a href=\"";
+                    html += path + file.name(); 
+                    html += "\">" + String(file.name()) + "</a> (" + String(file.size()) + " bytes)";
+                }
+                html += "</li>";
+                file = root.openNextFile();
+            }
+            root.close(); // GARANTE O FECHAMENTO DO DIRETÓRIO
+            html += "</ul></body></html>";
+            server.send(200, "text/html", html);
+            return;
+        }
+    } 
+    
+    // --- 2. SE NÃO TERMINA COM '/' E É UM ARQUIVO (para baixar) ---
+    else { 
+        root = SD.open(path, FILE_READ);
+        
+        // Verifica se falhou ao abrir OU se o que abriu era um diretório
+        if (!root || root.isDirectory()) { 
+             server.send(404, "text/plain", "404 Not Found (Arquivo nao encontrado ou inacessivel)");
+             Serial.println("404 Not Found (Arquivo): " + path);
+             return;
+        }
+
+        Serial.print("Servindo arquivo: ");
+        Serial.println(path);
+        
+        // Configura o navegador para forçar o download (attachment)
+        server.setContentLength(root.size());
+        server.sendHeader("Content-Disposition", "attachment; filename=" + path.substring(path.lastIndexOf('/') + 1));
+        
+        server.streamFile(root, "application/octet-stream"); 
+        root.close(); // Fecha o arquivo após servir
+        return;
+    }
+    
+    // Fallback de erro
+    server.send(500, "text/plain", "500 Erro interno na logica de SD Web");
+    Serial.println("500 Erro de logica.");
 }
 
 // --- Função Setup: Executada uma vez ao ligar/resetar o ESP32 ---
@@ -521,7 +618,7 @@ void setup() {
 
     // Verifica se o SD está inicializado ANTES de tentar iniciar o FTP
     if (SD.cardSize() > 0) { // Uma forma simples de verificar se o SD.begin() teve sucesso
-        ftpSrv.begin(FTP_USER, FTP_PASS, &SD, FILESYSTEM_SD);
+        ftpSrv.begin(String(FTP_USER), String(FTP_PASS));
         Serial.println("=========================================");
         Serial.println("         Servidor FTP Iniciado!");
         Serial.print("IP do Aparelho: ");
