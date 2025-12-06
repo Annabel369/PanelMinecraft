@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Desenho TFT Interativo</title>
+    <link rel="stylesheet" href="styles.css"> </head>
+<body>
+
+    <div class="container">
+        
+        <h2>🎨 Tela de Desenho (Clique para Pixelar)</h2>
+        <p>A área verde simula o `tft.fillRect(x, y, 120, 120, TFT_GREEN)`.</p>
+
+        <div id="creeper-container" data-x="50" data-y="80" data-tam="120">
+            <div id="pixel-grid">
+                </div>
+        </div>
+
+        <button id="generateCodeBtn">Gerar Código TFT e Simular Envio AJAX</button>
+
+        ---
+
+        <h2>💻 Código TFT Gerado</h2>
+        <p>Este código simula a função Arduino, baseado em `x=50`, `y=80` e `tam=120`.</p>
+        <pre id="codeOutput">
+            void drawCustomCreeper(int x, int y, int tam) {
+                tft.fillRect(x, y, tam, tam, TFT_GREEN);
+                // O código de tft.fillRect para os pixels pretos aparecerá aqui...
+            }
+        </pre>
+        
+        <div id="ajaxStatus"></div>
+    </div>
+
+    <script src="script.js"></script> </body>
+</html>

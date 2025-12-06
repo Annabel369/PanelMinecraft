@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulação Tela Minecraft (Creeper Detalhado)</title>
+    <style>
+        /* === CSS === */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #222; /* Fundo do corpo para contraste */
+            font-family: monospace;
+        }
+
+        #tft-screen {
+            /* Dimensões aproximadas de uma tela TFT pequena */
+            width: 320px;
+            height: 240px;
+            background-color: #000; /* Cor de fundo TFT_BLACK */
+            position: relative;
+            overflow: hidden; 
+            border: 5px solid #444;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Estilo para simular o texto */
+        .text-header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 32px; /* setTextSize(4) */
+            color: #00FF00; /* TFT_GREEN */
+            line-height: 1;
+        }
+
+        /* Container principal do Creeper */
+        #creeper-container {
+            position: absolute;
+            top: 80px; /* int y = 80 */
+            left: 50px; /* int x = 50 */
+            width: 120px; /* int tam = 120 */
+            height: 120px;
+        }
+
+        /* Fundo verde (tft.fillRect(x, y, tam, tam, TFT_GREEN)) */
+        #creeper-body {
+            width: 100%;
+            height: 100%;
+            background-color: #00FF00; /* TFT_GREEN */
+            position: absolute;
+        }
+
+        /* Estilo para cada pixel preto individual (10x10) */
+        .pixel {
+            background-color: #000; /* TFT_BLACK */
+            position: absolute;
+            width: 10px;  /* pixelSize */
+            height: 10px; /* pixelSize */
+        }
+        
+        /* Estilo para a área de status/animação */
+        #status-area {
+            position: absolute;
+            top: 230px; /* tft.setCursor(50, 230) */
+            left: 50px;
+            height: 20px; 
+            width: 200px;
+            font-size: 16px; /* tft.setTextSize(2) */
+            color: #FFF; /* Cor inicial (TFT_WHITE) */
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="tft-screen">
+        <div class="text-header">MINECRAFT</div>
+        
+        <div id="creeper-container">
+            <div id="creeper-body"></div>
+            
+            <div class="pixel" style="left: 30px; top: 10px;"></div>
+            <div class="pixel" style="left: 40px; top: 10px;"></div>
+            <div class="pixel" style="left: 70px; top: 10px;"></div>
+            <div class="pixel" style="left: 80px; top: 10px;"></div>
+            
+            <div class="pixel" style="left: 20px; top: 20px;"></div>
+            <div class="pixel" style="left: 30px; top: 20px;"></div>
+            <div class="pixel" style="left: 40px; top: 20px;"></div>
+            <div class="pixel" style="left: 70px; top: 20px;"></div>
+            <div class="pixel" style="left: 80px; top: 20px;"></div>
+            <div class="pixel" style="left: 90px; top: 20px;"></div>
+            
+            <div class="pixel" style="left: 20px; top: 30px;"></div>
+            <div class="pixel" style="left: 30px; top: 30px;"></div>
+            <div class="pixel" style="left: 40px; top: 30px;"></div>
+            <div class="pixel" style="left: 70px; top: 30px;"></div>
+            <div class="pixel" style="left: 80px; top: 30px;"></div>
+            <div class="pixel" style="left: 90px; top: 30px;"></div>
+            
+            <div class="pixel" style="left: 50px; top: 50px;"></div>
+            <div class="pixel" style="left: 60px; top: 50px;"></div>
+            
+            <div class="pixel" style="left: 30px; top: 60px;"></div>
+            <div class="pixel" style="left: 40px; top: 60px;"></div>
+            <div class="pixel" style="left: 50px; top: 60px;"></div>
+            <div class="pixel" style="left: 60px; top: 60px;"></div>
+            <div class="pixel" style="left: 70px; top: 60px;"></div>
+            <div class="pixel" style="left: 80px; top: 60px;"></div>
+            
+            <div class="pixel" style="left: 30px; top: 70px;"></div>
+            <div class="pixel" style="left: 40px; top: 70px;"></div>
+            <div class="pixel" style="left: 50px; top: 70px;"></div>
+            <div class="pixel" style="left: 60px; top: 70px;"></div>
+            <div class="pixel" style="left: 70px; top: 70px;"></div>
+            <div class="pixel" style="left: 80px; top: 70px;"></div>
+            
+            <div class="pixel" style="left: 30px; top: 80px;"></div>
+            <div class="pixel" style="left: 40px; top: 80px;"></div>
+            <div class="pixel" style="left: 50px; top: 80px;"></div>
+            <div class="pixel" style="left: 60px; top: 80px;"></div>
+            <div class="pixel" style="left: 70px; top: 80px;"></div>
+            <div class="pixel" style="left: 80px; top: 80px;"></div>
+            
+            <div class="pixel" style="left: 30px; top: 90px;"></div>
+            <div class="pixel" style="left: 40px; top: 90px;"></div>
+            <div class="pixel" style="left: 70px; top: 90px;"></div>
+            <div class="pixel" style="left: 80px; top: 90px;"></div>
+            
+            <div class="pixel" style="left: 30px; top: 100px;"></div>
+            <div class="pixel" style="left: 40px; top: 100px;"></div>
+            <div class="pixel" style="left: 70px; top: 100px;"></div>
+            <div class="pixel" style="left: 80px; top: 100px;"></div>
+        </div>
+        
+        <div id="status-area"></div>
+    </div>
+
+    <script>
+        // === JAVASCRIPT ===
+        
+        const tftScreen = document.getElementById('tft-screen');
+        const statusArea = document.getElementById('status-area');
+        
+        // Simula a função original com a animação de status
+        async function exibeTelaMinecraft() {
+            
+            // Reabilita o conteúdo da tela se estiver limpo
+            const defaultContent = `
+                <div class="text-header">MINECRAFT</div>
+                <div id="creeper-container">
+                    <div id="creeper-body"></div>
+                    ${document.getElementById('creeper-container').innerHTML}
+                </div>
+                <div id="status-area"></div>
+            `;
+
+            // Garante que o statusArea esteja visível para a animação
+            const statusDiv = document.getElementById('status-area');
+            statusDiv.textContent = ""; 
+            
+            console.log("Iniciando animação de status...");
+
+            for (let i = 0; i < 5; i++) {
+                // delay(500)
+                await new Promise(resolve => setTimeout(resolve, 500)); 
+
+                if (i % 2 === 0) {
+                    // tft.println("Start Server...")
+                    statusDiv.style.color = '#FFFFFF'; 
+                    statusDiv.textContent = "Start Server...";
+                } else {
+                    // tft.fillRect(50, 230, 200, 20, TFT_BLACK); 
+                    statusDiv.textContent = ""; 
+                }
+            }
+            
+            // delay(800)
+            await new Promise(resolve => setTimeout(resolve, 800)); 
+            
+            // tft.fillScreen(TFT_BLACK)
+            // Simula a transição para uma nova tela
+            tftScreen.innerHTML = '';
+            
+            console.log("Simulação de tela finalizada (limpando tela).");
+            
+            // Opcional: Recarrega o conteúdo após um breve momento para ver o efeito
+            setTimeout(() => {
+                // Esta parte seria removida se fosse apenas uma simulação, 
+                // mas é útil para manter a página interativa
+                tftScreen.innerHTML = defaultContent;
+                exibeTelaMinecraft(); 
+            }, 2000); 
+        }
+
+        // Inicia a simulação
+        document.addEventListener('DOMContentLoaded', exibeTelaMinecraft);
+    </script>
+
+</body>
+</html>
